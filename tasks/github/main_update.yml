@@ -1,0 +1,28 @@
+- name: Clone Git Repository
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "{{ vars_file }}"
+
+  tasks:
+    - name: Check if git repo diretory exists locally
+      command: bash -c "ls -la {{ github_dest }} | grep .git"
+      ignore_errors: True
+      register: repo_exists
+
+    - name: Creates git directory
+      file:
+        path: "{{ github_dest }}"
+        state: directory
+        mode: 0775
+      when: repo_exists is failed
+
+    - name: Checkout "{{ github_repo }}" in "{{ github_version }}" branch
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ github_dest }}"
+        accept_hostkey: yes
+        clone: yes
+        update: yes
+        force: yes
+        version: "{{ github_version }}"

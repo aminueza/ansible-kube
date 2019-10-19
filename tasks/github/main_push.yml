@@ -1,0 +1,38 @@
+- name: Push Git Repository
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "{{ vars_file }}"
+
+  tasks:
+    - name: Check if the files have changed
+      command: >
+        git ls-files -m
+      args:
+        chdir: "{{ github_dest }}"
+      ignore_errors: True
+      register: git_files
+
+    - name: Add the files to the repo
+      command: >
+        git add "{{ item }}"
+      args:
+        chdir: "{{ github_dest }}"
+      changed_when: 'git_files.stdout != ""'
+      with_items:
+        - "{{ git_files.stdout_lines }}"
+
+    - name: Commit changes to the repo
+      command: >
+        git commit -m "{{ github_message }}"
+      args:
+        chdir: "{{ github_dest }}"
+      changed_when: 'git_files.stdout != ""'
+
+    - name: Push changes to k8s repo
+      command: >
+        git push origin "{{ github_version }}"
+      args:
+        chdir: "{{ github_dest }}"
+      register: git_push
+      changed_when: 'git_files.stdout != ""'

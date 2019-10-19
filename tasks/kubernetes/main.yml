@@ -1,0 +1,55 @@
+- name: Deployment to Kubernetes
+  hosts: all
+  gather_facts: no
+  vars_files:
+    - "{{ vars_file }}"
+  tasks:
+    - name: Set kubectl default context
+      shell: "kubectl config use-context {{ k8s_context }}"
+
+    - name: Get TAG from circleCi
+      local_action: command python get_tag_python/get_tag.py "{{ ansible_app }}" "{{ ansible_branch }}"
+      changed_when: False
+      register: results
+
+    - name: Save TAG from circleCi
+      set_fact:
+        k8s_tag: "{{ results.stdout }}"
+
+    - name: Show TAG from circleCi
+      debug:
+        msg: "{{ k8s_tag }}"
+
+    # - name: Grab yaml file names
+    #   find:
+    #     pattern: "{{ item }}".yaml
+    #     path: "{{ github_dest }}"
+    #   register: yaml
+    #   with_items:
+    #     - "{{ file }}"
+
+    - name: Replace IMAGE TAGS in yaml files
+      become: yes
+      replace:
+        path: "{{ github_dest }}/{{ item.0 }}"
+        replace: "image: {{item.1}}"
+        regexp: 'image:\s[A-Za-z0-9-_/:.]*'
+      with_nested:
+        - "{{ files }}"
+        - "{{ k8s_tag }}"
+
+    - name: Replace OTHER TAGS in yaml files
+      become: yes
+      replace:
+        path: "{{ github_dest }}/{{ item.0 }}"
+        regexp: "{{ item.1.regexp }}"
+        replace: "{{ item.1.line}}"
+      with_nested:
+        - "{{ files }}"
+        - "{{ keys }}"
+
+    - name: Deploy yaml files to k8s
+      shell: >
+        kubectl apply -f '{{ github_dest }}/{{ item }}'
+      with_items:
+        - "{{ files }}"

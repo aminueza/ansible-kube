@@ -1,0 +1,13 @@
+# ---
+# - name: Ensure necessary variables are defined
+#   hosts: localhost
+#   gather_facts: no
+#   vars_files:
+#     - required_vars/required_vars.yml
+#   tasks:
+#     - name: Ensure environment is defined
+#       fail:
+#         msg: "Variable '{{ item }}' is not defined"
+#       with_items: "{{ required_vars | default([]) }}"
+#       when: env is not defined
+#       tags: [variable-check]

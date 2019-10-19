@@ -1,0 +1,4 @@
+---
+required_vars:
+  - github_repo
+  - github_version

@@ -1,0 +1,46 @@
+---
+- name: Installing requirements
+  hosts: all
+  gather_facts: no
+  vars_files:
+    - "{{ vars_file }}"
+  tasks:
+    - name: Install Python 2.7 for Ansible and Buildbot
+      raw: test -e /usr/bin/python || test -e /usr/bin/python2 || test -e /usr/bin/python2.7 || test -e /usr/local/bin/python2.7 || (test -e /usr/bin/apt && apt -qqy update && apt install -qqy python) || (test -e /usr/bin/dnf && dnf install -qqy python2) || (test -e /usr/sbin/pkg && pkg install -qqy python2)
+      register: output
+      changed_when:
+        - output.stdout != ""
+        - output.stdout != "\r\n"
+
+    - name: Install Homebrew [MacOSX]
+      include: install-homebrew.yml
+      when: ansible_distribution == 'MacOSX'
+      tags: deps
+
+    - name: Install Packages - MAC
+      become: "{{ ansible_user_id if ansible_distribution == 'MacOSX' else 'root' }}"
+      homebrew:
+        name: "{{item}}"
+        state: latest
+      loop:
+        - "python3"
+        - "git"
+      when: (ansible_distribution == "MacOSX")
+      tags: deps
+
+    - name: Install Packages - Ubuntu
+      become: yes
+      apt:
+        name: "{{item}}"
+        state: latest
+        update_cache: true
+      loop:
+        - "python3"
+        - "git"
+      when: (ansible_distribution == "Ubuntu")
+      tags: deps
+
+    - name: Install pip [CentOS, MacOSX]
+      include: install-pip.yml
+      when: ansible_distribution in ['CentOS', 'MacOSX']
+      tags: deps

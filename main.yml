@@ -1,0 +1,8 @@
+---
+- name: Deployment ansible App
+  hosts: all
+
+- import_playbook: tasks/requirements/requirements.yml
+- import_playbook: tasks/github/main_update.yml
+- import_playbook: tasks/kubernetes/main.yml
+- import_playbook: tasks/github/main_push.yml

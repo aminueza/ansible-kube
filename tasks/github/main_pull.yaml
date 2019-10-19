@@ -1,0 +1,22 @@
+- name: Pull Git Repository
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - "{{ vars_file }}"
+
+  tasks:
+    - name: Check changes in repository
+      command: >
+        git status
+      args:
+        chdir: "{{ github_dest }}"
+      ignore_errors: True
+      register: git_status
+
+    - name: Update Repository
+      command: >
+        git pull
+      args:
+        chdir: "{{ github_dest }}"
+      ignore_errors: True
+      changed_when: '"Your branch is up to date" not in git_status.stdout'

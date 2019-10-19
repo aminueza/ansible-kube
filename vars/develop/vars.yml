@@ -1,0 +1,36 @@
+---
+#Kubernetes env variable
+
+k8s_kubeconfig: ~/.kube/config
+k8s_context: <kubernetes-context>
+
+#Github Kubernetes env variable
+
+github_dest: ~/Documents/k8s
+github_repo: <github-repo>
+github_message: "feat: added yaml file"
+github_version: master
+github_ssh_keys: ~/.ssh/id_rsa
+
+#Github App env variable
+#These envs are important to check CircleCI status
+#Change the variables with app's name  and branch of your current task
+#i.e. If you have pushed changes in a branch "review" in "ansible" app
+# ansible_app: ansible and ansible_branch: review
+
+ansible_app: ansible 
+ansible_branch: reciew #staging, review, YOUR_BRANCH_NAME
+
+#Yaml File(s) to be changed
+files:
+  - "amq-service.yaml"
+  - "postgres-service.yaml"
+
+# Variables to change in yaml k8s files.
+# Important: All keys should follow the template
+# Regex: Keyword wrote previous in yaml k8s file
+# Line: Word to be replaced
+
+keys:
+  - { regexp: "YOUR_PORT", line: "5672" }
+  - { regexp: "PS_PORT", line: "5432" }
